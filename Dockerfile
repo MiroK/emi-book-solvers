@@ -46,6 +46,6 @@ RUN git clone https://github.com/MiroK/ulfy.git && \
 # emi-boo-repo
 RUN git clone https://github.com/MiroK/emi-book-solvers.git
 
-ENV PYTHONPATH="/home/fenics/emi-book-fem/":"$PYTHONPATH"
+ENV PYTHONPATH="/home/fenics/emi-book-solvers/":"$PYTHONPATH"
 
 USER root
