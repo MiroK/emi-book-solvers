@@ -325,3 +325,28 @@ def configure_iters_ksp(params):
         return cond, ksp_time, niters, residuals, wh
 
     return get_iters
+
+
+def direct_solve(A, b, W, which='umfpack'):
+    '''inv(A)*b'''
+    print 'Solving system of size %d' % A.size(0)
+    # NOTE: umfpack sometimes blows up, MUMPS produces crap more often than not
+    if isinstance(W, list):
+        wh = ii_Function(W)
+        LUSolver(which).solve(A, wh.vector(), b)
+        print('|b-Ax| from direct solver', (A*wh.vector()-b).norm('linf'))
+        
+        return wh
+    
+    wh = Function(W)
+    LUSolver(which).solve(A, wh.vector(), b)
+    print('|b-Ax| from direct solver', (A*wh.vector()-b).norm('linf'))
+
+    if isinstance(W.ufl_element(), (ufl.VectorElement, ufl.TensorElement)) or W.num_sub_spaces() == 1:
+        return ii_Function([W], [wh])
+
+    # Now get components
+    Wblock = serialize_mixed_space(W)
+    wh = wh.split(deepcopy=True)
+    
+    return ii_Function(Wblock, wh)
