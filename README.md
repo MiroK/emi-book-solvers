@@ -56,7 +56,10 @@ Here 4 refinements, conductivity value 1, and time step parameter 0.01 are used.
 the iterative solver is set to conjugate gradients (CG) using relative tolerance of
 1E-10 and preconditioner corresponding to key 2 in the `W_RIESZ_MAPS` of
 `prime_single.py` [module](https://github.com/MiroK/emi-book-solvers/blob/master/emi/fem/prime_single.py#L231).
-A succesfull run results in a result file `iters_fem.prime_single_monolithic_precond_standard_kappa1_eps0.01.txt`
+Note that the single-dimensional formulation is the only one of the 4 discussed which results in 
+positive symmetric matrix. The other formulations lead to saddle point systems and as such, they 
+should be solved with `-ksp_type minres` (Minimal Residual method) or other suitable solvers from [PETSc](https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPType.html). 
+A succesfull run of `check_iters.py` results in a result file `iters_fem.prime_single_monolithic_precond_standard_kappa1_eps0.01.txt`
 (since the key 2 preconditioner is named __monolithic__, cf. the source code), which is
 located in `/home/fenics/emi-book-solvers/emi/results`. The file contains details of
 the refinement study in particular the columns of the number of unknowns (ndofs), different errors
