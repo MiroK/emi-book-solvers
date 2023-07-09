@@ -31,15 +31,15 @@ def setup_problem(n, mms, params):
     V1 = FunctionSpace(inner_mesh, 'CG', 1)
     W = [V0, V1]
     
-    u0, u1 = map(TrialFunction, W)
-    v0, v1 = map(TestFunction, W)
+    u0, u1 = list(map(TrialFunction, W))
+    v0, v1 = list(map(TestFunction, W))
 
     a = block_form(W, 2)
     a[0][0] = inner(u0, v0)*dx
     a[1][1] = inner(u1, v1)*dx
     L = block_form(W, 1)
     
-    A, b = map(ii_assemble, (a, L))
+    A, b = list(map(ii_assemble, (a, L)))
     
     return A, b, W
 
@@ -73,13 +73,13 @@ def dd_solve(n, mms, params, tol):
     
     W = [V0, V1]
 
-    u0, u1 = map(TrialFunction, W)
-    v0, v1 = map(TestFunction, W)
+    u0, u1 = list(map(TrialFunction, W))
+    v0, v1 = list(map(TestFunction, W))
 
     Tu0, Tv0 = (Trace(f, interface_mesh) for f in (u0, v0))
     Tu1, Tv1 = (Trace(f, interface_mesh) for f in (u1, v1))
 
-    u0h, u1h = map(Function, W)
+    u0h, u1h = list(map(Function, W))
     # Mark subdomains of the interface mesh (to get source terms therein)
     subdomains = mms.subdomains[1]  # 
     marking_f = MeshFunction('size_t', interface_mesh, interface_mesh.topology().dim(), 0)
@@ -90,7 +90,7 @@ def dd_solve(n, mms, params, tol):
     dx_ = Measure('dx', domain=interface_mesh, subdomain_data=marking_f)
 
     # Data
-    kappa, epsilon = map(Constant, (params.kappa, params.eps))
+    kappa, epsilon = list(map(Constant, (params.kappa, params.eps)))
     # Source for domains, outer boundary data, source for interface
     f1, f, gBdry, gGamma, hGamma = mms.rhs
 
@@ -133,7 +133,7 @@ def dd_solve(n, mms, params, tol):
         q0.vector().set_local(q.vector().get_local())
         
         # Solve inner
-        A1, b1 = map(ii_convert, map(ii_assemble, (a1, L1)))
+        A1, b1 = list(map(ii_convert, list(map(ii_assemble, (a1, L1)))))
 
         now = time()
         if A1_inv is None:
@@ -145,7 +145,7 @@ def dd_solve(n, mms, params, tol):
 
         Tgrad_uh1.vector()[:] = get_P0_gradient(u1h).vector()
         # Solve outer
-        A0, b0 = map(ii_convert, map(ii_assemble, (a0, L0)))
+        A0, b0 = list(map(ii_convert, list(map(ii_assemble, (a0, L0)))))
         A0, b0 = apply_bc(A0, b0, V0_bcs)
         # solve(A0, u0h.vector(), b0)
 
@@ -169,7 +169,7 @@ def dd_solve(n, mms, params, tol):
         q.vector()[:] = get_diff(u0h, u1h).vector()
         rel_v = rel(q, q0)
 
-        print k, '->', u1h.vector().norm('l2'), u0h.vector().norm('l2'), flux_error, rel0, rel1, tol, rel_v, (dt0, dt1, assemble_time)
+        print(k, '->', u1h.vector().norm('l2'), u0h.vector().norm('l2'), flux_error, rel0, rel1, tol, rel_v, (dt0, dt1, assemble_time))
         errors.append(rel_v)
         
         converged = errors[-1] < tol or k > 200
@@ -188,7 +188,7 @@ def setup_error_monitor(mms_data, params):
         wh_, dt, (flux_error, niters), errors = dd_solve(n, mms_data, params, tol)
         u1h, uh = wh_
 
-        print '>>>', dt
+        print('>>>', dt)
         np.savetxt('emi_DD_LU_n%d_tol%g_eps%g.txt' % (n, tol, params.eps),
                    errors)
         

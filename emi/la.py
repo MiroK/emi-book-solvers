@@ -12,11 +12,11 @@ import ufl
 
 def my_eigvalsh(A, B, tol=1E-8, Z=None):
     '''Au = lmbda Bu transforming to EVP'''
-    print 'Z is', Z
+    print('Z is', Z)
     if Z is None or not len(Z):
     # Transformation
         beta, U = np.linalg.eigh(B)
-        print '\tDone power <<'
+        print('\tDone power <<')
         Bnh = U.dot(np.diag(beta**-0.5).dot(U.T))
         # We have a complete set of vectors - now we'd like ignore those eigs
         # that belong to vectors parallel with Z
@@ -40,7 +40,7 @@ def my_eigh(A, B):
     '''Au = lmbda Bu transforming to EVP'''
     # Transformation
     beta, U = np.linalg.eigh(B)
-    print '\tDone power'
+    print('\tDone power')
     Bnh = U.dot(np.diag(beta**-0.5).dot(U.T))
     
     S = Bnh.dot(A.dot(Bnh))
@@ -58,9 +58,9 @@ def slepc_eigh(A, B, Z=None, is_hermitian=True):
     E.setOperators(A, B)
     E.setProblemType(SLEPc.EPS.ProblemType.GHEP)
     E.setType('lapack')
-    print 'Z is', Z
+    print('Z is', Z)
     if Z is not None:
-        print 'Set'
+        print('Set')
         Z = [as_backend_type(z).vec() for z in Z]
         E.setDeflationSpace(Z)
 
@@ -79,7 +79,7 @@ def slepc_eigh(A, B, Z=None, is_hermitian=True):
     for i in idx:
         E.getEigenvector(i, v)
         eigv.append(v.array.real.tolist())
-        print v.dot(Z[0])
+        print(v.dot(Z[0]))
     eigv = np.array(eigv)
 
     return eigw, eigv.T
@@ -113,8 +113,8 @@ def spectrum(A, B, full=False, Z=None):
     
     # NOTE: eigvalsh relies on B being SPD which we do not check
     if full:
-        print 'Symmetry', is_symmetric, as_backend_type(A).mat().isHermitian(), is_hermitian(A, 1E-6)
-        print np.linalg.norm(A.array() - A.array().T)
+        print('Symmetry', is_symmetric, as_backend_type(A).mat().isHermitian(), is_hermitian(A, 1E-6))
+        print(np.linalg.norm(A.array() - A.array().T))
         # Symmetry dispatch
         if not is_symmetric:
             assert False  # FIXME: allow only symmetry
@@ -150,7 +150,7 @@ def get_extreme_eigw(A, B, Z, params, which):
 
     # Wrap
     opts = PETSc.Options()
-    for key, value in params.items():
+    for key, value in list(params.items()):
         opts.setValue(key, None if value == 'none' else value)
 
     # Setup the eigensolver
@@ -217,8 +217,8 @@ def configure_cond_eps(params):
         lmin, _ = get_extreme_eigw(A, B, Z, params, SLEPc.EPS.Which.SMALLEST_MAGNITUDE)
         lmax, flag = get_extreme_eigw(A, B, Z ,params, SLEPc.EPS.Which.LARGEST_MAGNITUDE)
 
-        print '\tmin', lmin
-        print '\tmax', lmax
+        print('\tmin', lmin)
+        print('\tmax', lmax)
 
         # Some failed to converge
         if not lmin or not lmax: return (None, '')
@@ -264,7 +264,7 @@ def configure_iters_ksp(params):
             wh.block_vec().randomize()
             # User configs
             opts = PETSc.Options()
-            for key, value in params.iteritems():
+            for key, value in params.items():
                 opts.setValue(key, None if value == 'none' else value)
                 ksp.setFromOptions()
             
@@ -290,7 +290,7 @@ def configure_iters_ksp(params):
             
             opts = PETSc.Options()
             # Database + user options
-            for key, value in params.iteritems():
+            for key, value in params.items():
                opts.setValue(key, None if value == 'none' else value)
             # Apply
             pc.setFromOptions()
@@ -329,18 +329,18 @@ def configure_iters_ksp(params):
 
 def direct_solve(A, b, W, which='umfpack'):
     '''inv(A)*b'''
-    print 'Solving system of size %d' % A.size(0)
+    print('Solving system of size %d' % A.size(0))
     # NOTE: umfpack sometimes blows up, MUMPS produces crap more often than not
     if isinstance(W, list):
         wh = ii_Function(W)
         LUSolver(which).solve(A, wh.vector(), b)
-        print('|b-Ax| from direct solver', (A*wh.vector()-b).norm('linf'))
+        print(('|b-Ax| from direct solver', (A*wh.vector()-b).norm('linf')))
         
         return wh
     
     wh = Function(W)
     LUSolver(which).solve(A, wh.vector(), b)
-    print('|b-Ax| from direct solver', (A*wh.vector()-b).norm('linf'))
+    print(('|b-Ax| from direct solver', (A*wh.vector()-b).norm('linf')))
 
     if isinstance(W.ufl_element(), (ufl.VectorElement, ufl.TensorElement)) or W.num_sub_spaces() == 1:
         return ii_Function([W], [wh])

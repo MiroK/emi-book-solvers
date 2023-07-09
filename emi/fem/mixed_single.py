@@ -28,8 +28,8 @@ def setup_problem(n, mms, params):
 
     W = [V1, Q1]
 
-    sigma1, u1 = map(TrialFunction, W)
-    tau1, v1 = map(TestFunction, W)
+    sigma1, u1 = list(map(TrialFunction, W))
+    tau1, v1 = list(map(TestFunction, W))
 
     # Hdiv trace should you normal (though orientation seems not important)
     n = OuterNormal(interface_mesh, [0.5, 0.5]) 
@@ -45,7 +45,7 @@ def setup_problem(n, mms, params):
     # The line integral
     dx_ = Measure('dx', domain=interface_mesh, subdomain_data=marking_f)
 
-    kappa1, epsilon = map(Constant, (params.kappa, params.eps))
+    kappa1, epsilon = list(map(Constant, (params.kappa, params.eps)))
     
     a = block_form(W, 2)
     a[0][0] = inner((1./kappa1)*sigma1, tau1)*dx(0) + inner(sigma1, tau1)*dx(1)
@@ -73,7 +73,7 @@ def setup_problem(n, mms, params):
     
     L[1] = -inner(f1, v1)*dx(0) - inner(f, v1)*dx(1)
 
-    A, b = map(ii_assemble, (a, L))
+    A, b = list(map(ii_assemble, (a, L)))
 
     return A, b, W
 

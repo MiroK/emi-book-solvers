@@ -11,7 +11,7 @@ def setup_mms(params):
     '''
     Simple MMS problem for UnitSquareMesh. Return MMSData.
     '''
-    mesh = UnitSquareMesh(mpi_comm_self(), 2, 2)  # Dummy
+    mesh = UnitSquareMesh(MPI.comm_self, 2, 2)  # Dummy
 
     V = FunctionSpace(mesh, 'CG', 2)
     S = FunctionSpace(mesh, 'DG', 0)
@@ -21,7 +21,7 @@ def setup_mms(params):
     u = Function(V)
     sigma = kappa*grad(u)
     # Outer normals of inner
-    normals = map(Constant, [(-1, 0), (1, 0), (0, -1), (0, 1)])
+    normals = list(map(Constant, [(-1, 0), (1, 0), (0, -1), (0, 1)]))
 
     # Forcing for first
     f = -div(sigma)

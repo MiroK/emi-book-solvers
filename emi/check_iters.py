@@ -76,7 +76,7 @@ def analyze_iters(problem, precond, cases, alpha, norm_type, iter_solve, logfile
                 error = rate = np.nan*np.ones(len(error_types))
 
             r_norm = residuals[-1]
-            row = [level, ndofs, h] + list(sum(zip(error, rate), ())) + [niters, ksp_time, B_setup, ksp_time+B_setup, r_norm, estim_cond] + subspaces
+            row = [level, ndofs, h] + list(sum(list(zip(error, rate)), ())) + [niters, ksp_time, B_setup, ksp_time+B_setup, r_norm, estim_cond] + subspaces
             
             history.append(row)
 
@@ -94,17 +94,17 @@ def analyze_iters(problem, precond, cases, alpha, norm_type, iter_solve, logfile
             residuals = ' '.join(('%g' % r) for r in residuals)
             stream.write('#! %s \n' % residuals)
 
-            print '='*79
-            print RED % str(alpha)
-            print GREEN % header
+            print('='*79)
+            print(RED % str(alpha))
+            print(GREEN % header)
             for row in history:
-                print msg % tuple(row)
-            print '='*79
+                print(msg % tuple(row))
+            print('='*79)
         data = np.array(history)
         h = data[:, 2]
         for col in [3 + i for i in range(0, len(error)+4, 2)]:
             e = data[:, col]
-            print np.polyfit(np.log(h), np.log(e), deg=1)
+            print(np.polyfit(np.log(h), np.log(e), deg=1))
     # For outside plotting
     return wh
     
@@ -189,7 +189,7 @@ if __name__ == '__main__':
     cmd_options = args.__dict__.copy()
     cmd_options.update(petsc_params)  # Remember all options
     del cmd_options['spawn']
-    cmd_options = '# %s\n' % (', '.join(map(str, cmd_options.items())))
+    cmd_options = '# %s\n' % (', '.join(map(str, list(cmd_options.items()))))
 
     # Look at small problems
     run_mms = lambda ndofs, x=args.run_mms == 1: x and ndofs < 4E6
@@ -209,7 +209,7 @@ if __name__ == '__main__':
             stream.write(cmd_options)  # Options and alpha go as comments
             stream.write('# %s\n' % alpha_str)
 
-        print RED % (('%d/%d' % (job_id, n_jobs)) + (header % (alpha_str, name)))
+        print(RED % (('%d/%d' % (job_id, n_jobs)) + (header % (alpha_str, name))))
 
         # The analysis
         wh = analyze_iters(module, precond, [args.case0, args.ncases], alpha, args.norm, get_iters, logfile, run_mms)

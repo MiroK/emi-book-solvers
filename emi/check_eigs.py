@@ -48,7 +48,7 @@ def analyze_cond(problem, precond, ncases, alpha, get_cond, logfile):
             # spectrum expects matrices
             B = ii_convert(BB)   # ii_convert is identity for mat
             # Again monolithic kernel
-            Z = map(ii_convert, Z) if Z else Z
+            Z = list(map(ii_convert, Z)) if Z else Z
             # For dirichlet cases we might not have the list space
             h = W[0].mesh().hmin() if isinstance(W, list) else W.mesh().hmin()
             ndofs = A.size(0)
@@ -64,9 +64,9 @@ def analyze_cond(problem, precond, ncases, alpha, get_cond, logfile):
             # Put the entire history because of eps monitor
             history.append(row)
 
-            print '='*79
-            print RED % str(alpha)
-            print GREEN % header
+            print('='*79)
+            print(RED % str(alpha))
+            print(GREEN % header)
 
             for i, row in enumerate(history):
                 
@@ -75,9 +75,9 @@ def analyze_cond(problem, precond, ncases, alpha, get_cond, logfile):
                 else:
                     increment = 0
                 
-                print msg % (row + (increment, ))
+                print(msg % (row + (increment, )))
 
-            print '='*79
+            print('='*79)
 
 # --------------------------------------------------------------------
 
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     cmd_options = args.__dict__.copy()
     cmd_options.update(petsc_params)  # Remember all options
     del cmd_options['spawn']
-    cmd_options = '# %s\n' % (', '.join(map(str, cmd_options.items())))
+    cmd_options = '# %s\n' % (', '.join(map(str, list(cmd_options.items()))))
 
     my_jobs = split_jobs(args.spawn, alphas)
     n_jobs = len(my_jobs)
@@ -171,7 +171,7 @@ if __name__ == '__main__':
             stream.write(cmd_options)  # Options and alpha go as comments
             stream.write('# %s\n' % alpha_str)
 
-        print RED % (('%d/%d' % (job_id, n_jobs)) + (header % (alpha_str, Bname)))
+        print(RED % (('%d/%d' % (job_id, n_jobs)) + (header % (alpha_str, Bname))))
 
         # The analysis
         analyze_cond(module, B, args.ncases, alpha, get_cond, logfile)

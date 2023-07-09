@@ -28,8 +28,8 @@ def setup_problem(n, mms, params):
     
     W = [V0, V1]
 
-    u0, u1 = map(TrialFunction, W)
-    v0, v1 = map(TestFunction, W)
+    u0, u1 = list(map(TrialFunction, W))
+    v0, v1 = list(map(TestFunction, W))
 
     Tu0, Tv0 = (Trace(f, interface_mesh) for f in (u0, v0))
     Tu1, Tv1 = (Trace(f, interface_mesh) for f in (u1, v1))
@@ -43,7 +43,7 @@ def setup_problem(n, mms, params):
     n = OuterNormal(interface_mesh, [0.5, 0.5])
     dx_ = Measure('dx', domain=interface_mesh, subdomain_data=marking_f)
 
-    kappa, epsilon = map(Constant, (params.kappa, params.eps))
+    kappa, epsilon = list(map(Constant, (params.kappa, params.eps)))
     
     a = block_form(W, 2)
 
@@ -65,7 +65,7 @@ def setup_problem(n, mms, params):
     L[1] = inner(f, v1)*dx
     L[1] += -sum((1./epsilon)*inner(gi, Tv1)*dx_(i) for i, gi in enumerate(gGamma, 1))
     
-    A, b = map(ii_assemble, (a, L))
+    A, b = list(map(ii_assemble, (a, L)))
     
     subdomains = mms.subdomains[0]  # 
     facet_f = MeshFunction('size_t', outer_mesh, outer_mesh.topology().dim()-1, 0)

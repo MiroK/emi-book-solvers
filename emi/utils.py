@@ -3,7 +3,10 @@ from dolfin import (Function, LUSolver, FunctionSpace, errornorm, interpolate,
                     as_backend_type, Vector, GenericVector, PETScVector, PETScMatrix)
 from collections import namedtuple
 from scipy.sparse import csr_matrix
-from hsmg.hseig import HsNorm
+try:
+    from hsmg.hseig import HsNorm
+except ImportError:
+    print('Missing HsEig')
 from xii import ii_Function
 from block import block_vec
 from petsc4py import PETSc
@@ -51,9 +54,9 @@ def get_problem_parameters(arguments, params):
             # Numbers
             if start < stop:
                 try:
-                    param_values = map(float, arguments[start:stop])
+                    param_values = list(map(float, arguments[start:stop]))
                 except ValueError:
-                    param_values = map(eval, arguments[start:stop])
+                    param_values = list(map(eval, arguments[start:stop]))
                 iterators[param] = param_values
             # Okay now there will be some work to do to get iteration
             else:
@@ -68,30 +71,24 @@ def get_problem_parameters(arguments, params):
     # As part of validity check there should be not more -param then needed
     assert not any(arg.startswith('-param_') for arg in arguments), 'Pass params only for %s' % params
 
-    ParameterSetBase = namedtuple('p', params)
-
-    class ParameterSet(ParameterSetBase):
-        def __init__(self, *args, **kwargs):
-            # assert all(v >= 0 for v in args), 'Problem parameters must be positive'
-            # assert all(v >= 0 for v in kwargs.values()), 'Problem parameters must be positive'
-            ParameterSetBase.__init__(self, *args, **kwargs)
+    ParameterSet = namedtuple('p', params)
 
     # For numbers
     if not expressions:
-        params, iterators = iterators.keys(), iterators.values()
-        parameters = (ParameterSet(**dict(zip(params, p))) for p in itertools.product(*iterators))
+        params, iterators = list(iterators.keys()), list(iterators.values())
+        parameters = (ParameterSet(**dict(list(zip(params, p)))) for p in itertools.product(*iterators))
     # There will be an expression giving value of all the parameters in terms
     # of those that have numerical range
     else:
         get_expr = parameter_expression(expressions, params)
         # Get expr takes in parameters with given numerical ranges and
         # return a dict where are the parameters are present
-        params, iterators = iterators.keys(), iterators.values()
+        params, iterators = list(iterators.keys()), list(iterators.values())
         
-        parameters = (ParameterSet(**get_expr(**dict(zip(params, p))))
+        parameters = (ParameterSet(**get_expr(**dict(list(zip(params, p)))))
                       for p in itertools.product(*iterators))
     # These guys come in pair key: value
-    petsc_arguments = dict(zip(arguments[0::2], arguments[1::2]))
+    petsc_arguments = dict(list(zip(arguments[0::2], arguments[1::2])))
 
     return parameters, petsc_arguments
 
@@ -107,14 +104,14 @@ def split_jobs(comm, jobs):
             rank, nprocs = 0, 1
         # Parse
         else:
-            rank, nprocs = map(int, comm.strip().split('/'))
+            rank, nprocs = list(map(int, comm.strip().split('/')))
     else:
         nprocs = comm.tompi4py().size
         rank = comm.tompi4py().rank
         
     assert 0 <= rank < nprocs
 
-    size = njobs/nprocs
+    size = njobs//nprocs
 
     first = rank*size
     last = njobs if rank == nprocs-1 else (rank+1)*size
@@ -135,13 +132,13 @@ L2_norm = lambda u, uh, degree_rise=2: errornorm(u, uh, 'L2', degree_rise=degree
 def subdomain_interpolate(pairs, V, reduce='last'):
     '''(f, chi), V -> Function fh in V such that fh|chi is f'''
     array = lambda f: f.vector().get_local()
-    fs, chis = zip(*pairs)
+    fs, chis = list(zip(*pairs))
     
     fs = np.column_stack([array(interpolate(f, V)) for f in fs])
     x = np.column_stack([array(interpolate(Expression('x[%d]' % i, degree=1), V)) for i in range(V.mesh().geometry().dim())])
 
     chis = [CompiledSubDomain(chi, tol=1E-10) for chi in chis]
-    is_masked = np.column_stack([map(lambda xi, chi=chi: not chi.inside(xi, False), x) for chi in chis])
+    is_masked = np.column_stack([list(map(lambda xi, chi=chi: not chi.inside(xi, False), x)) for chi in chis])
 
     fs = mask.masked_array(fs, is_masked)
 
@@ -251,7 +248,7 @@ def randomize(y):
 
         return y
 
-    return block_vec(map(randomize, y))
+    return block_vec(list(map(randomize, y)))
 
 
 def matrix_fromHs(Hs):

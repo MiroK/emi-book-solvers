@@ -29,8 +29,8 @@ def setup_problem(n, mms, params):
     
     W = [V1, V, Q]
 
-    u1, u, p = map(TrialFunction, W)
-    v1, v, q = map(TestFunction, W)
+    u1, u, p = list(map(TrialFunction, W))
+    v1, v, q = list(map(TestFunction, W))
 
     Tu1, Tv1 = (Trace(f, interface_mesh) for f in (u1, v1))
     Tu, Tv = (Trace(f, interface_mesh) for f in (u, v))
@@ -43,7 +43,7 @@ def setup_problem(n, mms, params):
     # The line integral
     dx_ = Measure('dx', domain=interface_mesh, subdomain_data=marking_f)
 
-    kappa, epsilon = map(Constant, (params.kappa, params.eps))
+    kappa, epsilon = list(map(Constant, (params.kappa, params.eps)))
     
     a = block_form(W, 2)
 
@@ -69,7 +69,7 @@ def setup_problem(n, mms, params):
     L[1] = inner(f, v)*dx
     L[2] = sum(inner(gi, q)*dx_(i) for i, gi in enumerate(gGamma, 1))
     
-    A, b = map(ii_assemble, (a, L))
+    A, b = list(map(ii_assemble, (a, L)))
 
     subdomains = mms.subdomains[0]  # 
     facet_f = MeshFunction('size_t', outer_mesh, outer_mesh.topology().dim()-1, 0)

@@ -23,7 +23,7 @@ def analyze(problem, cases, alpha, norm_type, logfile):
     # Annotate columnts
     columns = ['ndofs', 'h'] + sum((['e[%s]' % t,'r[%s]' % t] for t in error_types), []) + ['subspaces']
     header = ' '.join(columns)
-    print GREEN % header
+    print(GREEN % header)
     
     # Stuff for command line printing as we go
     formats = ['%d', '%.2E'] + sum((['%.4E', '\033[1;37;34m%.2f\033[0m'] for _ in error_types), [])
@@ -45,7 +45,7 @@ def analyze(problem, cases, alpha, norm_type, logfile):
             AA, bb, W = problem.setup_problem(n, mms_data, alpha)
             # Since direct solver expects monolithic
             info('\tConversion'); cvrt_timer = Timer('cvrt')
-            A, b = map(ii_convert, (AA, bb))  # This is do nothing for monolithic
+            A, b = list(map(ii_convert, (AA, bb)))  # This is do nothing for monolithic
 
             # print np.sort(np.abs(np.linalg.eigvalsh(A.array())))
             info('\tDone (Conversion) %g' % cvrt_timer.stop())
@@ -54,9 +54,9 @@ def analyze(problem, cases, alpha, norm_type, logfile):
 
             wh = direct_solve(A, b, W)  # Output is always iiFunction
             
-            print [np.any(np.isnan(whi.vector().get_local())) for whi in wh]
-            print [np.any(np.isinf(whi.vector().get_local())) for whi in wh]
-            print [whi.vector().norm('l2') for whi in wh]
+            print([np.any(np.isnan(whi.vector().get_local())) for whi in wh])
+            print([np.any(np.isinf(whi.vector().get_local())) for whi in wh])
+            print([whi.vector().norm('l2') for whi in wh])
             
             # And later want list space
             W = wh.function_space()
@@ -73,19 +73,19 @@ def analyze(problem, cases, alpha, norm_type, logfile):
             h0, e0 = h, error
 
             # ndofs h zip of errors and rates
-            row = [ndofs, h] + list(sum(zip(error, rate), ())) + subspaces
+            row = [ndofs, h] + list(sum(list(zip(error, rate)), ())) + subspaces
 
             if not msg_has_subspaces:
                 msg = ' '.join([msg] + ['%d']*len(subspaces))
             msg_has_subspaces = True
 
             msg_history.append(row)
-            print '='*79
-            print RED % str(alpha)
-            print GREEN % header
+            print('='*79)
+            print(RED % str(alpha))
+            print(GREEN % header)
             for msg_row in msg_history:
-                print msg % tuple(msg_row)
-            print '='*79
+                print(msg % tuple(msg_row))
+            print('='*79)
                 
             stream.write('%s\n' % ' '.join(map(str, row)))
     # Out for plotting
@@ -105,13 +105,13 @@ def collapse(thing):
 # --------------------------------------------------------------------
 
 if __name__ == '__main__':
-    from utils import get_problem_parameters, split_jobs
+    from emi.utils import get_problem_parameters, split_jobs
     import argparse, os, importlib
     from dolfin import (File, interpolate, Measure, inner, TrialFunction,
                         TestFunction, Function, solve, MeshFunction, CompiledSubDomain,
-                        set_log_level, WARNING, FacetNormal, assemble, dot)
+                        set_log_level, FacetNormal, assemble, dot)
 
-    set_log_level(WARNING)
+    set_log_level(40)
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # Which module to test?
@@ -148,15 +148,15 @@ if __name__ == '__main__':
     # What comes back is a geneterator over tensor product of parameter
     # ranges and cleaned up petsc arguments
     alphas, petsc_params = get_problem_parameters(petsc_args, module.PARAMETERS)
-    print args.spawn
+    print(args.spawn)
     # We log everyhing
     savedir = args.save_dir
     not os.path.exists(savedir) and os.mkdir(savedir)
         
     # So all the command line options
     # Spawn is ignored because it differs across files
-    options = {k: v for k, v in args.__dict__.items() if k != 'spawn'}
-    options = '# %s\n' % (', '.join(map(str, options.items())))
+    options = {k: v for k, v in list(args.__dict__.items()) if k != 'spawn'}
+    options = '# %s\n' % (', '.join(map(str, list(options.items()))))
 
     header = '\n'.join(['*'*60, '* %s', '*'*60])
     
@@ -170,7 +170,7 @@ if __name__ == '__main__':
             f.write(options)  # Options and alpha go as comments
             f.write('# %s\n' % alpha_str)
 
-        print RED % (header % str(alpha))
+        print(RED % (header % str(alpha)))
 
         wh, mms_data = analyze(module, (args.case0, args.ncases), alpha, args.norm, logfile)
 
