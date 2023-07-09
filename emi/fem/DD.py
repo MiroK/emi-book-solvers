@@ -12,7 +12,7 @@ from time import time
 def setup_problem(n, mms, params):
     '''Domain decomposition for EMI'''
     # This is here only to get the API OKAY
-    base_mesh = UnitSquareMesh(mpi_comm_self(), *(4, )*2)
+    base_mesh = UnitSquareMesh(mpi_comm_self(), *(n, )*2)
     mms.normals.append(n)
     
     # Marking
